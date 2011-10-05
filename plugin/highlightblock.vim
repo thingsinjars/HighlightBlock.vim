@@ -20,7 +20,7 @@ if g:highlightblock_map_keys
     nnoremap <leader>i :call <sid>HighlightCodeBlocks()<CR>
 endif
 
-autocmd InsertLeave *.[html|php]  call <sid>HighlightCodeBlocks()
+autocmd InsertLeave *.*  call <sid>HighlightCodeBlocks()
 
 fun! s:HighlightCodeBlocks()
   sign define wholeline linehl=HighlightedBlock
@@ -33,6 +33,18 @@ fun! s:HighlightCodeBlocks()
     let currentBlock = synIDattr(synID(linenr, 1, 1), "name")
     if currentBlock == 'cssStyle' || currentBlock == 'javaScript' || currentBlock == 'javaScriptLineComment' || currentBlock == '' && lastBlock == 'cssStyle' || currentBlock == '' && lastBlock == 'javaScript' || currentBlock == '' && lastBlock == 'javaScriptLineComment'
       exe ":sign place 1 name=wholeline line=" . linenr . " file=" . expand("%:p")
+   endif
+    if currentBlock != ''
+      let lastBlock = currentBlock
+   endif
+  endwhile 
+endfun
+
+" ------------------------------------------------------------------------------
+let &cpo= s:keepcpo
+unlet s:keepcpo
+
+      
     endif
     if currentBlock != ''
       let lastBlock = currentBlock
@@ -43,4 +55,6 @@ endfun
 " ------------------------------------------------------------------------------
 let &cpo= s:keepcpo
 unlet s:keepcpo
+
+
 
