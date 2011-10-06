@@ -1,50 +1,71 @@
+" HighlightBlocksPlugin: Uses signs to apply highlighting to a full-width line
+" (not just until the last character)
+" Author:   Simon Madine (@thingsinjars)
+" Date:     6 October 2011
+" Usage:    Runs automatically on new bufferwindow and exiting insert mode
+"
+" Theming:  This applies the styles from the 'HighlightedBlock' tag to each
+"           matched line
+"
+" NOTE:     Doesn't play nice with other signs-based plugins
+"           Currently only recognises CSS & JS for highlighting
+"           Currently only applied to html, php, vm and rb files
 "------------------------------------------------------------------------------
-" Exit when your app has already been loaded (or "compatible" mode set)
+" Exit if this module has already been loaded (or "compatible" mode set)
 if exists("g:loaded_HighlightBlock") || &cp
   finish
 endif
-let g:loaded_HighlightBlock= 1 " your version number
+let g:loaded_HighlightBlock= 1 " version number
 let s:keepcpo           = &cpo
 set cpo&vim
 
-" Public Interface:
-" HighlightCodeBlocks: is a function you expect your users to call
-" HB: some sequence of characters that will run your AppFunction
-" Repeat these three lines as needed for multiple functions which will
-" be used to provide an interface for the user
-if !exists('g:highlightblock_map_keys')
-    let g:highlightblock_map_keys = 1
-endif
-
-if g:highlightblock_map_keys
-    nnoremap <leader>i :call <sid>HighlightCodeBlocks()<CR>
-endif
-
-autocmd InsertLeave *.*  call <sid>HighlightCodeBlocks()
+let s:SyntaxToHighlight = ['cssStyle', 'cssComment', 'javaScript', 'javaScriptComment', 'javaScriptLineComment']
+sign define wholeline linehl=HighlightedBlock
+ 
+" There's no public interface or keybinding required here
+" as we only fire on an event
+autocmd InsertLeave,BufWinEnter *.html,*.php,*.vm,*.rb  call <sid>HighlightCodeBlocks()
 
 fun! s:HighlightCodeBlocks()
-  sign define wholeline linehl=HighlightedBlock
+  " Start at the top of the file each time
   let linenr = 0
   let lastBlock = 'cssStyle'
+
+  " Clear all current signs (sorry about that)
   sign unplace *
+
+  " This is so we know how wide our Line Numbers column needs to be
+  let atleastonesignset = 0
+
   while linenr < line("$")
-    let linenr += 1	" The += construction requires vim 7.0 . 
-    " Need to detect 'is this line active for 'htmlJavaScript' highlight or
-    " 'cssStyle' highlight?'
+    let linenr += 1
+    
+    " Get the Syntax Highlight tag assigned to the first character in this
+    " line to figure out what the line should be doing
     let currentBlock = synIDattr(synID(linenr, 1, 1), "name")
-    if currentBlock == 'cssStyle' || currentBlock == 'javaScript' || currentBlock == 'javaScriptLineComment' || currentBlock == '' && lastBlock == 'cssStyle' || currentBlock == '' && lastBlock == 'javaScript' || currentBlock == '' && lastBlock == 'javaScriptLineComment'
+
+    " Check to see if that is in our list of Syntax Tags to highlight
+    " or if it is undefined and directly follows a highlightable tag
+    if (index(s:SyntaxToHighlight, currentBlock) >= 0) || currentBlock == '' && (index(s:SyntaxToHighlight, lastBlock) >= 0)
+      let atleastonesignset = 1
       exe ":sign place 1 name=wholeline line=" . linenr . " file=" . expand("%:p")
       if &numberwidth == 6
         set numberwidth=4
       endif
     endif
+
     if currentBlock != ''
       let lastBlock = currentBlock
-   endif
+    endif
   endwhile 
+
+  " There are no highlight blocks left so we increase the size of the line
+  " number column again.
+  if atleastonesignset == 0
+    set numberwidth=6
+  endif
 endfun
 
 " ------------------------------------------------------------------------------
 let &cpo= s:keepcpo
 unlet s:keepcpo
-
