@@ -26,6 +26,7 @@ fun! s:HighlightCodeBlocks()
   sign define wholeline linehl=HighlightedBlock
   let linenr = 0
   let lastBlock = 'cssStyle'
+  sign unplace *
   while linenr < line("$")
     let linenr += 1	" The += construction requires vim 7.0 . 
     " Need to detect 'is this line active for 'htmlJavaScript' highlight or
