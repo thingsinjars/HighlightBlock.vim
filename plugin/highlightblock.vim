@@ -12,7 +12,7 @@
 "           Currently only applied to html, php, vm and rb files
 "------------------------------------------------------------------------------
 " Exit if this module has already been loaded (or "compatible" mode set)
-if exists("g:loaded_HighlightBlock") || &cp
+if exists("g:loaded_HighlightBlock") || &cp || !has("signs")
   finish
 endif
 let g:loaded_HighlightBlock= 1 " version number
@@ -20,7 +20,7 @@ let s:keepcpo           = &cpo
 set cpo&vim
 
 let s:SyntaxToHighlight = ['cssStyle', 'cssComment', 'javaScript', 'javaScriptComment', 'javaScriptLineComment']
-sign define wholeline linehl=HighlightedBlock
+sign define highlightline linehl=HighlightedBlock
  
 " There's no public interface or keybinding required here
 " as we only fire on an event
@@ -48,7 +48,7 @@ fun! s:HighlightCodeBlocks()
     " or if it is undefined and directly follows a highlightable tag
     if (index(s:SyntaxToHighlight, currentBlock) >= 0) || currentBlock == '' && (index(s:SyntaxToHighlight, lastBlock) >= 0)
       let atleastonesignset = 1
-      exe ":sign place 1 name=wholeline line=" . linenr . " file=" . expand("%:p")
+      exe ":sign place " . linenr . " name=highlightline line=" . linenr . " file=" . expand("%:p")
       if &numberwidth == 6
         set numberwidth=4
       endif
